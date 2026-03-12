@@ -11,28 +11,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     // MARK: - App Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // Create a minimal hidden window — the Touch Bar needs an active window
+        // Create a small, minimal window — the Touch Bar requires
+        // the app to be active (frontmost) to display its content
         window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 300, height: 1),
-            styleMask: [.titled, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 80),
+            styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false
         )
-        window.title = "Touch Bar Landscape"
+        window.title = "🏔️ Touch Bar Landscape"
         window.isReleasedWhenClosed = false
-        window.level = .floating
+        window.center()
+
+        // Add a simple label to the window content
+        let label = NSTextField(labelWithString: "✨ Pixel art is scrolling on your Touch Bar!\nKeep this window focused to see it.")
+        label.alignment = .center
+        label.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        label.textColor = .secondaryLabelColor
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        let contentView = NSView(frame: window.contentView!.bounds)
+        contentView.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            label.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -16),
+        ])
+        window.contentView = contentView
 
         // Use a custom WindowController that provides the Touch Bar
         windowController = LandscapeWindowController(window: window)
         windowController.showWindow(nil)
 
-        // Position off-screen so it's not visible
-        window.setFrameOrigin(NSPoint(x: -10000, y: -10000))
-        window.orderFront(nil)
+        // Activate the app so it becomes frontmost — required for Touch Bar
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
     }
 
     func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        return false
+        return true
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
