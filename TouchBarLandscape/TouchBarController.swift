@@ -1,9 +1,13 @@
 import Cocoa
 import SpriteKit
 
-/// A custom NSWindowController that provides the Touch Bar with an SKView
+/// An NSViewController that provides the Touch Bar with an embedded SKView
 /// displaying the scrolling pixel art landscape.
-class LandscapeWindowController: NSWindowController, NSTouchBarDelegate {
+///
+/// Using NSViewController (as the window's contentViewController) is the most
+/// reliable way to inject a custom Touch Bar — it sits properly in the
+/// responder chain between the view and the window.
+class TouchBarViewController: NSViewController, NSTouchBarDelegate {
 
     // MARK: - Touch Bar Identifiers
 
@@ -21,14 +25,37 @@ class LandscapeWindowController: NSWindowController, NSTouchBarDelegate {
     private var skView: SKView?
     private var landscapeScene: LandscapeScene?
 
+    // MARK: - View Lifecycle
+
+    override func loadView() {
+        // Create a simple content view with a label
+        let contentView = NSView(frame: NSRect(x: 0, y: 0, width: 360, height: 80))
+
+        let label = NSTextField(labelWithString: "✨ Pixel art is scrolling on your Touch Bar!\nKeep this app focused to see it.")
+        label.alignment = .center
+        label.font = NSFont.systemFont(ofSize: 13, weight: .medium)
+        label.textColor = .secondaryLabelColor
+        label.translatesAutoresizingMaskIntoConstraints = false
+
+        contentView.addSubview(label)
+        NSLayoutConstraint.activate([
+            label.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            label.centerYAnchor.constraint(equalTo: contentView.centerYAnchor),
+            label.leadingAnchor.constraint(greaterThanOrEqualTo: contentView.leadingAnchor, constant: 16),
+            label.trailingAnchor.constraint(lessThanOrEqualTo: contentView.trailingAnchor, constant: -16),
+        ])
+
+        self.view = contentView
+    }
+
     // MARK: - NSTouchBar Creation
 
     @available(macOS 10.12.2, *)
     override func makeTouchBar() -> NSTouchBar? {
         let touchBar = NSTouchBar()
-        touchBar.customizationIdentifier = LandscapeWindowController.touchBarIdentifier
+        touchBar.customizationIdentifier = TouchBarViewController.touchBarIdentifier
         touchBar.delegate = self
-        touchBar.defaultItemIdentifiers = [LandscapeWindowController.landscapeItemIdentifier]
+        touchBar.defaultItemIdentifiers = [TouchBarViewController.landscapeItemIdentifier]
         return touchBar
     }
 
@@ -40,7 +67,7 @@ class LandscapeWindowController: NSWindowController, NSTouchBarDelegate {
         makeItemForIdentifier identifier: NSTouchBarItem.Identifier
     ) -> NSTouchBarItem? {
 
-        guard identifier == LandscapeWindowController.landscapeItemIdentifier else {
+        guard identifier == TouchBarViewController.landscapeItemIdentifier else {
             return nil
         }
 
